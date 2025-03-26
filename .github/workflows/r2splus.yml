@@ -24,7 +24,7 @@ on:
 env:
   #REPO_URL: https://github.com/coolsnowwolf/lede
   #REPO_BRANCH: master
-  #FEEDS_CONF: feeds.conf.default
+  FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: r2splus.config
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2.sh
@@ -75,7 +75,7 @@ jobs:
         tools/repo init -u https://github.com/friendlyarm/friendlywrt_manifests -b master-v24.10 \
         -m rk3328.xml --repo-url=https://github.com/friendlyarm/repo  --no-clone-bundle
         tools/repo sync -c  --no-clone-bundle
-        ./build.sh rk3328.mk
+        ./build.sh nanopi_r2s.mk
         ln -sf /mnt/workdir/friendlywrt24-rk3328/friendlyarm $GITHUB_WORKSPACE/friendlyarm
 
     - name: Load custom feeds
@@ -129,7 +129,10 @@ jobs:
       run: |
         cd friendlywrt24-rk3328/friendlyarm
         echo -e "$(nproc) thread compile"
-        make -j$(nproc)        
+        rm -rf ./tmp
+        make -j$(nproc)
+        cd ../
+        ./build.sh sd-img
         echo "::set-output name=status::success"
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
