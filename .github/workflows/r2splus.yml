@@ -78,6 +78,16 @@ jobs:
         tools/repo sync -c  --no-clone-bundle
         ./build.sh nanopi_r2s.mk
         ln -sf /mnt/workdir/friendlywrt24-rk3328/friendlywrt $GITHUB_WORKSPACE/friendlywrt
+        cd ~
+        git clone -b openwrt-24.10 --single-branch --filter=blob:none https://github.com/immortalwrt/immortalwrt
+        cd ~/immortalwrt
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+        cd /mnt/workdir/friendlywrt24-rk3328/friendlywrt
+        cp -r ~/immortalwrt/feeds/luci/applications/luci-app-zerotier feeds/luci/applications/
+        cp -r ~/immortalwrt/feeds/packages/net/zerotier feeds/packages/net/
+        rm feeds/packages/net/zerotier/patches/0001-fix-miniupnpc-natpmp-include-path.patch
+        ./scripts/feeds install -a -f
 
     - name: Load custom feeds
       run: |
