@@ -11,4 +11,4 @@
 #
 
 # Modify default IP
-sed -i 's/192.168.2.1/192.168.4.1/g' friendlywrt/target/linux/rockchip/armv8/base-files/etc/board.d/02_network
+sed -i 's/192.168.2.1/192.168.4.1/g' target/linux/rockchip/armv8/base-files/etc/board.d/02_network
