@@ -86,6 +86,8 @@ jobs:
 
     - name: Fix something
       run: |
+        PWD
+        ls -lah
         cd friendlywrt24-rk3328/friendlywrt
         mkdir -p feeds/luci/applications
         mkdir -p feeds/packages/net
@@ -101,7 +103,7 @@ jobs:
         cd friendlywrt24-rk3328/friendlywrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
 
-    - name: build 1st
+    - name: Build 1st
       run: |
         cd friendlywrt24-rk3328
         ./build.sh nanopi_r2s.mk
