@@ -86,7 +86,7 @@ jobs:
 
     - name: Fix something
       run: |
-        PWD
+        pwd
         ls -lah
         cd friendlywrt24-rk3328/friendlywrt
         mkdir -p feeds/luci/applications
