@@ -84,6 +84,8 @@ jobs:
         ./scripts/feeds update -a
         ./scripts/feeds install -a
         cd /mnt/workdir/friendlywrt
+        mkdir -p feeds/luci/applications
+        mkdir -p feeds/packages/net
         cp -r ~/immortalwrt/feeds/luci/applications/luci-app-zerotier feeds/luci/applications/
         cp -r ~/immortalwrt/feeds/packages/net/zerotier feeds/packages/net/
         rm feeds/packages/net/zerotier/patches/0001-fix-miniupnpc-natpmp-include-path.patch
