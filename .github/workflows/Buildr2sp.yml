@@ -156,22 +156,24 @@ jobs:
       if: (!cancelled())
       run: |
         df -hT
-        mkdir -p img
-        mv friendlywrt24-rk3328/out/*.gz img
-        mv friendlywrt24-rk3328/friendlywrt/{.config,feeds.conf.default} img
+        mkdir -p r2splus
+        mv friendlywrt24-rk3328/out/*.gz r2splus
+        mv friendlywrt24-rk3328/friendlywrt/{.config,feeds.conf.default} r2splus
 
-    - name: Upload bin directory
+    - name: Upload r2splus directory
       uses: actions/upload-artifact@main
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
         name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: img
+        path: r2splus
         
     - name: Organize files
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
-        echo "FIRMWARE=r2splus" >> $GITHUB_ENV
+        cd r2splus
+        rm -rf packages
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "::set-output name=status::success"
 
     - name: Upload firmware directory
