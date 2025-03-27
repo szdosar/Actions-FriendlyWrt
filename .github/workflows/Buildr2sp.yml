@@ -96,7 +96,7 @@ jobs:
       working-directory: /mnt/workdir
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF friendlywrt/feeds.conf.default
-        chmod +x $DIY_P1_SH
+        sudo chmod +x $DIY_P1_SH
         pwd
         cd friendlywrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
@@ -124,7 +124,7 @@ jobs:
       run: |
         [ -e files ] && mv files friendlywrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE friendlywrt/.config
-        chmod +x $DIY_P2_SH
+        sudo chmod +x $DIY_P2_SH
         cd friendlywrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
