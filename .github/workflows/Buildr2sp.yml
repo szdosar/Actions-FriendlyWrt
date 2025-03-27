@@ -64,7 +64,6 @@ jobs:
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /mnt/workdir
-        sudo cp -r ./ /mnt/workdir/
         sudo chown $USER:$GROUPS /mnt/workdir
 
     - name: Clone source code
@@ -75,16 +74,19 @@ jobs:
         tools/repo init -u https://github.com/friendlyarm/friendlywrt_manifests -b master-v24.10 \
         -m rk3328.xml --repo-url=https://github.com/friendlyarm/repo  --no-clone-bundle
         tools/repo sync -c  --no-clone-bundle
-        ln -sf /mnt/workdir/friendlywrt $GITHUB_WORKSPACE/friendlywrt
+        ln -sf /mnt/workdir/friendlywrt24-rk3328 $GITHUB_WORKSPACE/friendlywrt24-rk3328
 
-    - name: fix something
+    - name: Clone immortalwrt
       run: |        
         cd ~
         git clone -b openwrt-24.10 --single-branch --filter=blob:none https://github.com/immortalwrt/immortalwrt
         cd ~/immortalwrt
         ./scripts/feeds update -a
         ./scripts/feeds install -a
-        cd /mnt/workdir/friendlywrt
+
+    - name: Fix something
+      run: |
+        cd friendlywrt24-rk3328/friendlywrt
         mkdir -p feeds/luci/applications
         mkdir -p feeds/packages/net
         cp -r ~/immortalwrt/feeds/luci/applications/luci-app-zerotier feeds/luci/applications/
@@ -93,21 +95,20 @@ jobs:
         ./scripts/feeds install -a -f
 
     - name: Load custom feeds
-      working-directory: /mnt/workdir
       run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF friendlywrt/feeds.conf.default
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF friendlywrt24-rk3328/friendlywrt/feeds.conf.default
         sudo chmod +x $DIY_P1_SH
-        pwd
-        cd friendlywrt
+        cd friendlywrt24-rk3328/friendlywrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
 
     - name: build 1st
       run: |
+        cd friendlywrt24-rk3328
         ./build.sh nanopi_r2s.mk
 
     - name: Update feeds & remove some packages
       run: |
-        cd friendlywrt
+        cd friendlywrt24-rk3328/friendlywrt
         ./scripts/feeds update -a
         rm -rf feeds/luci/applications/luci-app-mosdns
         rm -rf feeds/packages/net/{alist,adguardhome,mosdns,xray*,v2ray*,v2ray*,sing*,smartdns}
@@ -117,15 +118,15 @@ jobs:
 
     - name: Install feeds
       run: |
-        cd friendlywrt
+        cd friendlywrt24-rk3328/friendlywrt
         ./scripts/feeds install -a
 
     - name: Load custom configuration
       run: |
-        [ -e files ] && mv files friendlywrt/files
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE friendlywrt/.config
+        [ -e files ] && mv files friendlywrt24-rk3328/friendlywrt/files
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE friendlywrt24-rk3328/friendlywrt/.config
         sudo chmod +x $DIY_P2_SH
-        cd friendlywrt
+        cd friendlywrt24-rk3328/friendlywrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
     - name: SSH connection to Actions
@@ -138,7 +139,7 @@ jobs:
     - name: Download package
       id: package
       run: |
-        cd friendlywrt
+        cd friendlywrt24-rk3328/friendlywrt
         make defconfig
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
@@ -147,7 +148,7 @@ jobs:
     - name: Compile the firmware
       id: compile
       run: |
-        cd friendlywrt
+        cd friendlywrt24-rk3328/friendlywrt
         echo -e "$(nproc) thread compile"
         rm -rf ./tmp
         make -j$(nproc)
@@ -163,8 +164,8 @@ jobs:
       run: |
         df -hT
         mkdir -p img
-        mv out/*.gz ./img/
-        mv friendlywrt/{.config,feeds.conf.default} ./img/
+        mv friendlywrt24-rk3328/out/*.gz ./img/
+        mv friendlywrt24-rk3328/friendlywrt/{.config,feeds.conf.default} ./img/
 
     - name: Upload bin directory
       uses: actions/upload-artifact@main
