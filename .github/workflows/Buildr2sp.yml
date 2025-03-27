@@ -79,29 +79,22 @@ jobs:
     - name: Clone immortalwrt
       run: |        
         cd ~
+        rm -rf  ~/immortalwrt
         git clone -b openwrt-24.10 --single-branch --filter=blob:none https://github.com/immortalwrt/immortalwrt
         cd ~/immortalwrt
-        ./scripts/feeds update -a
+        sed -i '1i src-git kenzo https://github.com/kenzok8/openwrt-packages' feeds.conf.default
+        sed -i '2i src-git small https://github.com/kenzok8/small' feeds.conf.default
+        ./scripts/feeds update -a && rm -rf feeds/luci/applications/luci-app-mosdns
+        rm -rf feeds/packages/net/{alist,adguardhome,mosdns,xray*,v2ray*,v2ray*,sing*,smartdns}
+        rm -rf feeds/packages/utils/v2dat
+        rm -rf feeds/packages/lang/golang
+        git clone https://github.com/sbwml/packages_lang_golang -b 24.x feeds/packages/lang/golang
         ./scripts/feeds install -a
 
-    - name: SSH connection to Actions
-      uses: P3TERX/ssh2actions@v1.0.0
-      if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
-      env:
-        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-
-    - name: Fix something
+    - name: Build 1st
       run: |
-        pwd
-        ls -lah
-        cd friendlywrt24-rk3328/friendlywrt
-        mkdir -p feeds/luci/applications
-        mkdir -p feeds/packages/net
-        cp -r ~/immortalwrt/feeds/luci/applications/luci-app-zerotier feeds/luci/applications/
-        cp -r ~/immortalwrt/feeds/packages/net/zerotier feeds/packages/net/
-        rm feeds/packages/net/zerotier/patches/0001-fix-miniupnpc-natpmp-include-path.patch
-        ./scripts/feeds install -a -f
+        cd friendlywrt24-rk3328
+        ./build.sh nanopi_r2s.mk
 
     - name: Load custom feeds
       run: |
@@ -110,25 +103,25 @@ jobs:
         cd friendlywrt24-rk3328/friendlywrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
 
-    - name: Build 1st
-      run: |
-        cd friendlywrt24-rk3328
-        ./build.sh nanopi_r2s.mk
-
-    - name: Update feeds & remove some packages
+    - name: Update feeds & Fix something
       run: |
         cd friendlywrt24-rk3328/friendlywrt
-        ./scripts/feeds update -a
         rm -rf feeds/luci/applications/luci-app-mosdns
         rm -rf feeds/packages/net/{alist,adguardhome,mosdns,xray*,v2ray*,v2ray*,sing*,smartdns}
         rm -rf feeds/packages/utils/v2dat
         rm -rf feeds/packages/lang/golang
         git clone https://github.com/sbwml/packages_lang_golang -b 24.x feeds/packages/lang/golang
+        cp -r ~/immortalwrt/feeds/luci/applications/{luci-app-zerotier,luci-app-vlmcsd} feeds/luci/applications/
+        cp -r ~/immortalwrt/feeds/packages/net/{zerotier,vlmcsd} feeds/packages/net/
+        rm package/feeds/packages/zerotier/patches/0001-fix-miniupnpc-natpmp-include-path.patch
+        cp -r ~/immortalwrt/feeds/kenzo/luci-app-adguardhome feeds/luci/applications/
+        cp -r ~/immortalwrt/feeds/kenzo/adguardhome feeds/packages/net/
+        ./scripts/feeds update -a
 
     - name: Install feeds
       run: |
         cd friendlywrt24-rk3328/friendlywrt
-        ./scripts/feeds install -a
+        ./scripts/feeds install -a -f
 
     - name: Load custom configuration
       run: |
@@ -138,16 +131,14 @@ jobs:
         cd friendlywrt24-rk3328/friendlywrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
-    - name: Download package
-      id: package
-      run: |
-        cd friendlywrt24-rk3328/friendlywrt
-        make defconfig
-        make download -j8
-        find dl -size -1024c -exec ls -l {} \;
-        find dl -size -1024c -exec rm -f {} \;
+    - name: SSH connection to Actions
+      uses: P3TERX/ssh2actions@v1.0.0
+      if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
+      env:
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
 
-    - name: Compile the firmware
+    - name: Compile the firmware with custom configuration
       id: compile
       run: |
         cd friendlywrt24-rk3328/friendlywrt
@@ -157,7 +148,7 @@ jobs:
         cd ../
         ./build.sh sd-img
         echo "::set-output name=status::success"
-        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
+        grep '^CONFIG_TARGET.*DEVICE.*=y' friendlywrt/.config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
 
@@ -166,8 +157,8 @@ jobs:
       run: |
         df -hT
         mkdir -p img
-        mv friendlywrt24-rk3328/out/*.gz ./img/
-        mv friendlywrt24-rk3328/friendlywrt/{.config,feeds.conf.default} ./img/
+        mv friendlywrt24-rk3328/out/*.gz img
+        mv friendlywrt24-rk3328/friendlywrt/{.config,feeds.conf.default} img
 
     - name: Upload bin directory
       uses: actions/upload-artifact@main
