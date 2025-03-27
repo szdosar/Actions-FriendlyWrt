@@ -92,6 +92,7 @@ jobs:
         ./scripts/feeds install -a -f
 
     - name: Load custom feeds
+      working-directory: /mnt/workdir
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF friendlywrt/feeds.conf.default
         chmod +x $DIY_P1_SH
@@ -101,7 +102,6 @@ jobs:
 
     - name: build 1st
       run: |
-        pwd
         ./build.sh nanopi_r2s.mk
 
     - name: Update feeds & remove some packages
