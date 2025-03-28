@@ -91,7 +91,7 @@ jobs:
         git clone https://github.com/sbwml/packages_lang_golang -b 24.x feeds/packages/lang/golang
         ./scripts/feeds install -a
 
-    - name: Build 1st
+    - name: Build rk3328
       run: |
         cd friendlywrt23-rk3328
         ./build.sh rk3328.mk
