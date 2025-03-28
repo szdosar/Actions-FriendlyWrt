@@ -143,6 +143,7 @@ jobs:
       run: |
         cd friendlywrt23-rk3328/friendlywrt
         echo -e "$(nproc) thread compile"
+        make defconfig
         rm -rf ./tmp
         make -j$(nproc)
         cd ../
