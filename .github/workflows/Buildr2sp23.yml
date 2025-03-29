@@ -91,6 +91,14 @@ jobs:
         git clone https://github.com/sbwml/packages_lang_golang -b 24.x feeds/packages/lang/golang
         ./scripts/feeds install -a
 
+    - name: Load custom configuration
+      run: |
+        [ -e files ] && mv files friendlywrt23-rk3328/friendlywrt/files
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE friendlywrt23-rk3328/friendlywrt/.config
+        sudo chmod +x $DIY_P2_SH
+        cd friendlywrt23-rk3328/friendlywrt
+        $GITHUB_WORKSPACE/$DIY_P2_SH
+
     - name: Build rk3328
       run: |
         cd friendlywrt23-rk3328
@@ -122,14 +130,6 @@ jobs:
       run: |
         cd friendlywrt23-rk3328/friendlywrt
         ./scripts/feeds install -a -f
-
-    - name: Load custom configuration
-      run: |
-        [ -e files ] && mv files friendlywrt23-rk3328/friendlywrt/files
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE friendlywrt23-rk3328/friendlywrt/.config
-        sudo chmod +x $DIY_P2_SH
-        cd friendlywrt23-rk3328/friendlywrt
-        $GITHUB_WORKSPACE/$DIY_P2_SH
 
     - name: SSH connection to Actions
       uses: P3TERX/ssh2actions@v1.0.0
