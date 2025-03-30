@@ -90,14 +90,6 @@ jobs:
         git clone https://github.com/sbwml/packages_lang_golang -b 24.x feeds/packages/lang/golang
         ./scripts/feeds install -a
 
-    - name: Load custom configuration
-      run: |
-        [ -e files ] && mv files friendlywrt23-rk3328/friendlywrt/files
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE friendlywrt23-rk3328/friendlywrt/.config
-        sudo chmod +x $DIY_P2_SH
-        cd friendlywrt23-rk3328/friendlywrt
-        $GITHUB_WORKSPACE/$DIY_P2_SH
-
     - name: Build rk3328
       run: |
         cd friendlywrt23-rk3328
@@ -124,6 +116,14 @@ jobs:
         cp -r ~/immortalwrt/feeds/kenzo/luci-app-adguardhome feeds/luci/applications/
         cp -r ~/immortalwrt/feeds/kenzo/adguardhome feeds/packages/net/
         ./scripts/feeds update -a
+
+    - name: Load custom configuration
+      run: |
+        [ -e files ] && mv files friendlywrt23-rk3328/friendlywrt/files
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE friendlywrt23-rk3328/friendlywrt/.config
+        sudo chmod +x $DIY_P2_SH
+        cd friendlywrt23-rk3328/friendlywrt
+        $GITHUB_WORKSPACE/$DIY_P2_SH
 
     - name: Install feeds
       run: |
