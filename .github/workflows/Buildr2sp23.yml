@@ -117,6 +117,11 @@ jobs:
         cp -r ~/immortalwrt/feeds/kenzo/adguardhome feeds/packages/net/
         ./scripts/feeds update -a
 
+    - name: Install feeds
+      run: |
+        cd friendlywrt23-rk3328/friendlywrt
+        ./scripts/feeds install -a -f
+
     - name: Load custom configuration
       run: |
         [ -e files ] && mv files friendlywrt23-rk3328/friendlywrt/files
@@ -124,11 +129,6 @@ jobs:
         sudo chmod +x $DIY_P2_SH
         cd friendlywrt23-rk3328/friendlywrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
-
-    - name: Install feeds
-      run: |
-        cd friendlywrt23-rk3328/friendlywrt
-        ./scripts/feeds install -a -f
 
     - name: SSH connection to Actions
       uses: P3TERX/ssh2actions@v1.0.0
@@ -142,7 +142,6 @@ jobs:
       run: |
         cd friendlywrt23-rk3328/friendlywrt
         echo -e "$(nproc) thread compile"
-        make defconfig
         rm -rf ./tmp
         make -j$(nproc)
         cd ../
