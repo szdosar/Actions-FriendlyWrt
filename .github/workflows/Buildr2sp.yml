@@ -80,7 +80,7 @@ jobs:
         git clone https://github.com/friendlyarm/repo --depth 1 tools
         tools/repo init -u https://github.com/friendlyarm/friendlywrt_manifests -b master-v24.10 \
         -m rk3328.xml --repo-url=https://github.com/friendlyarm/repo  --no-clone-bundle
-        sed -i '1s|^.*$|#!/usr/bin/env python2|' tools/repo
+        sed -i '1s|^.*$|#!/usr/bin/env python2|' /mnt/workdir/friendlywrt24-rk3328/tools/repo
         tools/repo sync -c  --no-clone-bundle
         ln -sf /mnt/workdir/friendlywrt24-rk3328 $GITHUB_WORKSPACE/friendlywrt24-rk3328
 
