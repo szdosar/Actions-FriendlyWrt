@@ -69,16 +69,9 @@ jobs:
     - name: Install Python 2.7 & pip2
       run: |
         sudo apt update
-        sudo apt install python2
+        sudo apt install -y python2
         curl https://bootstrap.pypa.io/pip/2.7/get-pip.py -o get-pip.py
         sudo python2 get-pip.py
-        python2 --version
-        pip2 --version
-        alias python=python2
-        alias pip=pip2
-        echo "alias python=python2" >> ~/.bashrc
-        echo "alias pip=pip2" >> ~/.bashrc
-        source ~/.bashrc
 
     - name: Clone source code
       working-directory: /mnt/workdir/friendlywrt24-rk3328
@@ -87,6 +80,7 @@ jobs:
         git clone https://github.com/friendlyarm/repo --depth 1 tools
         tools/repo init -u https://github.com/friendlyarm/friendlywrt_manifests -b master-v24.10 \
         -m rk3328.xml --repo-url=https://github.com/friendlyarm/repo  --no-clone-bundle
+        sed -i '1s|^.*$|#!/usr/bin/env python2|' tools/repo
         tools/repo sync -c  --no-clone-bundle
         ln -sf /mnt/workdir/friendlywrt24-rk3328 $GITHUB_WORKSPACE/friendlywrt24-rk3328
 
