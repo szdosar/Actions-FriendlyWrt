@@ -66,6 +66,20 @@ jobs:
         sudo mkdir -p /mnt/workdir/friendlywrt24-rk3328
         sudo chown -R $USER:$GROUPS /mnt/workdir
 
+    - name: Install Python 2.7 & pip2
+      run: |
+        sudo apt update
+        sudo apt install python2
+        curl https://bootstrap.pypa.io/pip/2.7/get-pip.py -o get-pip.py
+        sudo python2 get-pip.py
+        python2 --version
+        pip2 --version
+        alias python=python2
+        alias pip=pip2
+        echo "alias python=python2" >> ~/.bashrc
+        echo "alias pip=pip2" >> ~/.bashrc
+        source ~/.bashrc
+
     - name: Clone source code
       working-directory: /mnt/workdir/friendlywrt24-rk3328
       run: |
