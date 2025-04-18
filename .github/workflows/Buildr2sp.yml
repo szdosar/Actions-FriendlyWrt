@@ -37,8 +37,8 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-    #timeout-minutes: 420
+    runs-on: ubuntu-20.04
+    timeout-minutes: 420
     #runs-on: ubuntu-latest
     #runs-on: self-hosted
 
@@ -66,13 +66,6 @@ jobs:
         sudo mkdir -p /mnt/workdir/friendlywrt24-rk3328
         sudo chown -R $USER:$GROUPS /mnt/workdir
 
-    - name: Install Python 2.7 & pip2
-      run: |
-        sudo apt update
-        sudo apt install -y python2
-        curl https://bootstrap.pypa.io/pip/2.7/get-pip.py -o get-pip.py
-        sudo python2 get-pip.py
-
     - name: Clone source code
       working-directory: /mnt/workdir/friendlywrt24-rk3328
       run: |
@@ -80,7 +73,6 @@ jobs:
         git clone https://github.com/friendlyarm/repo --depth 1 tools
         tools/repo init -u https://github.com/friendlyarm/friendlywrt_manifests -b master-v24.10 \
         -m rk3328.xml --repo-url=https://github.com/friendlyarm/repo  --no-clone-bundle
-        sed -i '1s|^.*$|#!/usr/bin/env python2|' /mnt/workdir/friendlywrt24-rk3328/tools/repo
         tools/repo sync -c  --no-clone-bundle
         ln -sf /mnt/workdir/friendlywrt24-rk3328 $GITHUB_WORKSPACE/friendlywrt24-rk3328
 
