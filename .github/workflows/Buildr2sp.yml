@@ -130,6 +130,8 @@ jobs:
         sudo chmod +x $DIY_P2_SH
         cd friendlywrt24-rk3328/friendlywrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
+        sed -i '/\/etc\/init\.d\/tailscale/d;/\/etc\/config\/tailscale/d;' feeds/packages/net/tailscale/Makefile
+        git clone https://github.com/asvow/luci-app-tailscale package/luci-app-tailscale
 
     - name: SSH connection to Actions
       uses: P3TERX/ssh2actions@v1.0.0
