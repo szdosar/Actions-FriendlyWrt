@@ -54,6 +54,8 @@ jobs:
         sudo -E apt-get -qq update
         sudo apt-get -y update
         sudo apt-get install -y sudo curl
+        #disable_ipv6
+        bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/disable_ipv6.sh)
         sudo bash -c \
           "$(curl -fsSL https://raw.githubusercontent.com/friendlyarm/build-env-on-ubuntu-bionic/master/install.sh)"
         export PATH=/opt/FriendlyARM/toolchain/11.3-aarch64/bin:$PATH
