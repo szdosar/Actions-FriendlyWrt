@@ -25,9 +25,7 @@ env:
   #REPO_URL: https://github.com/coolsnowwolf/lede
   #REPO_BRANCH: master
   FEEDS_CONF: feeds.conf.default
-  CONFIG_FILE: .config
-  DIY_P1_SH: diy-part1.sh
-  DIY_P2_SH: diy-part2.sh
+  CONFIG_FILE: fr24.config
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
   UPLOAD_COWTRANSFER: false
@@ -55,7 +53,7 @@ jobs:
         sudo apt-get -y update
         sudo apt-get install -y sudo curl
         #disable_ipv6
-        bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/disable_ipv6.sh)
+        #bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/disable_ipv6.sh)
         sudo bash -c \
           "$(curl -fsSL https://raw.githubusercontent.com/friendlyarm/build-env-on-ubuntu-bionic/master/install.sh)"
         export PATH=/opt/FriendlyARM/toolchain/11.3-aarch64/bin:$PATH
@@ -77,6 +75,7 @@ jobs:
         -m rk3328.xml --repo-url=https://github.com/friendlyarm/repo  --no-clone-bundle
         tools/repo sync -c  --no-clone-bundle
         ln -sf /mnt/workdir/friendlywrt24-rk3328 $GITHUB_WORKSPACE/friendlywrt24-rk3328
+        echo "" | bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/install_go.sh)
 
     - name: Clone immortalwrt
       run: |        
@@ -96,44 +95,35 @@ jobs:
     - name: Build 1st
       run: |
         cd friendlywrt24-rk3328
+        sed -i 's/192.168.2.1/192.168.4.1/g' friendlywrt/target/linux/rockchip/armv8/base-files/etc/board.d/02_network
         ./build.sh nanopi_r2s.mk
 
-    - name: Load custom feeds
-      run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF friendlywrt24-rk3328/friendlywrt/feeds.conf.default
-        sudo chmod +x $DIY_P1_SH
-        cd friendlywrt24-rk3328/friendlywrt
-        $GITHUB_WORKSPACE/$DIY_P1_SH
-
-    - name: Update feeds & Fix something
+    - name: Fix something
       run: |
         cd friendlywrt24-rk3328/friendlywrt
-        rm -rf feeds/luci/applications/luci-app-mosdns
+        sed -i '$a src-git passwall_packages https://github.com/sbwml/openwrt_helloworld.git' feeds.conf.default
+        sed -i '$a src-git passwall2 https://github.com/xiaorouji/openwrt-passwall2.git;main' feeds.conf.default
+        ./scripts/feeds update -a && rm -rf feeds/luci/applications/luci-app-mosdns
         rm -rf feeds/packages/net/{alist,adguardhome,mosdns,xray*,v2ray*,v2ray*,sing*,smartdns}
         rm -rf feeds/packages/utils/v2dat
         rm -rf feeds/packages/lang/golang
-        git clone https://github.com/sbwml/packages_lang_golang -b 24.x feeds/packages/lang/golang
+        git clone https://github.com/kenzok8/golang feeds/packages/lang/golang
+        ./scripts/feeds install -a 
         cp -r ~/immortalwrt/feeds/luci/applications/{luci-app-zerotier,luci-app-vlmcsd} feeds/luci/applications/
         cp -r ~/immortalwrt/feeds/packages/net/{zerotier,vlmcsd} feeds/packages/net/
-        rm package/feeds/packages/zerotier/patches/0001-fix-miniupnpc-natpmp-include-path.patch
         cp -r ~/immortalwrt/feeds/kenzo/luci-app-adguardhome feeds/luci/applications/
         cp -r ~/immortalwrt/feeds/kenzo/adguardhome feeds/packages/net/
-        ./scripts/feeds update -a
-
-    - name: Install feeds
-      run: |
-        cd friendlywrt24-rk3328/friendlywrt
-        ./scripts/feeds install -a -f
-
-    - name: Load custom configuration
-      run: |
-        [ -e files ] && mv files friendlywrt24-rk3328/friendlywrt/files
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE friendlywrt24-rk3328/friendlywrt/.config
-        sudo chmod +x $DIY_P2_SH
-        cd friendlywrt24-rk3328/friendlywrt
-        $GITHUB_WORKSPACE/$DIY_P2_SH
+        ./scripts/feeds update -a -f && ./scripts/feeds install -a -f
         sed -i '/\/etc\/init\.d\/tailscale/d;/\/etc\/config\/tailscale/d;' feeds/packages/net/tailscale/Makefile
         git clone https://github.com/asvow/luci-app-tailscale package/luci-app-tailscale
+
+    - name: Load custom config file & Build 2nd
+      run: |
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE friendlywrt24-rk3328/friendlywrt/.config
+        cd friendlywrt24-rk3328/friendlywrt
+        rm -rf tmp
+        make defconfig
+        make -j$(nproc)
 
     - name: SSH connection to Actions
       uses: P3TERX/ssh2actions@v1.0.0
@@ -145,11 +135,7 @@ jobs:
     - name: Compile the firmware with custom configuration
       id: compile
       run: |
-        cd friendlywrt24-rk3328/friendlywrt
-        echo -e "$(nproc) thread compile"
-        rm -rf ./tmp
-        make -j$(nproc)
-        cd ../
+        cd friendlywrt24-rk3328
         ./build.sh sd-img
         echo "::set-output name=status::success"
         grep '^CONFIG_TARGET.*DEVICE.*=y' friendlywrt/.config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
