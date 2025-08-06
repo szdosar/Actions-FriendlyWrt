@@ -24,7 +24,7 @@ on:
 env:
   #REPO_URL: https://github.com/coolsnowwolf/lede
   #REPO_BRANCH: master
-  FEEDS_CONF: feeds.conf.default
+  #FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: fr24.config
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
@@ -92,7 +92,7 @@ jobs:
         git clone https://github.com/sbwml/packages_lang_golang -b 24.x feeds/packages/lang/golang
         ./scripts/feeds install -a
 
-    - name: Build 1st
+    - name: Compile friendlywrt 1st
       run: |
         cd friendlywrt24-rk3328
         sed -i 's/192.168.2.1/192.168.4.1/g' friendlywrt/target/linux/rockchip/armv8/base-files/etc/board.d/02_network
@@ -117,7 +117,7 @@ jobs:
         sed -i '/\/etc\/init\.d\/tailscale/d;/\/etc\/config\/tailscale/d;' feeds/packages/net/tailscale/Makefile
         git clone https://github.com/asvow/luci-app-tailscale package/luci-app-tailscale
 
-    - name: Load custom config file & Build 2nd
+    - name: Compile friendlywrt 2nd with custom config file
       run: |
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE friendlywrt24-rk3328/friendlywrt/.config
         cd friendlywrt24-rk3328/friendlywrt
@@ -132,7 +132,7 @@ jobs:
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
 
-    - name: Compile the firmware with custom configuration
+    - name: Packaging sd-img image
       id: compile
       run: |
         cd friendlywrt24-rk3328
