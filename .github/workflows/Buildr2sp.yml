@@ -124,7 +124,7 @@ jobs:
         rm -rf tmp
         make defconfig
         #make -j$(nproc)
-        bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/fix_singbox_init.sh)
+        bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/fix_singbox_init.sh) || true
         make -j$(nproc) || true
         bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/fix_singbox_ech_stub.sh) || true
         make package/feeds/small/sing-box/compile || true
