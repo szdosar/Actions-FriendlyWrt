@@ -123,6 +123,12 @@ jobs:
         cd friendlywrt24-rk3328/friendlywrt
         rm -rf tmp
         make defconfig
+        #make -j$(nproc)
+        bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/fix_singbox_init.sh)
+        make -j$(nproc) || true
+        bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/fix_singbox_ech_stub.sh) || true
+        make package/feeds/small/sing-box/compile || true
+        make package/feeds/packages/geoview/compile || true
         make -j$(nproc)
 
     - name: SSH connection to Actions
